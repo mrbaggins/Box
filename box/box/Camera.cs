@@ -10,6 +10,7 @@ namespace Box
 {
     class Camera
     {
+        //Test comment for git
         public enum Rotations
         {
             YawLeft,
@@ -27,6 +28,8 @@ namespace Box
         Vector3 look = Vector3.Forward;
         Matrix viewMatrix;
 
+
+        //Another test comment
         public void Rotate(Rotations r, float angle)
         {
             switch (r)
