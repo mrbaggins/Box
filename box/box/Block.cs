@@ -49,9 +49,14 @@ namespace Box
 
         // Lets us check if the data has been constructed or not to improve performance
         private bool _isConstructed = false;
+        public void setDirty()
+        {
+            _isConstructed = false;
+        }
 
         public Vector3 Size { get; set; }
-        public Vector3 Position { get; set; }
+        private Vector3 position;
+        public Vector3 Position { get { return position; } set { position = value; } }
         public Vector3 Texture { get; set; }
         public Color Color { get; set; }
 
@@ -63,7 +68,7 @@ namespace Box
         public Block(Vector3 size, Vector3 position, int blockID)
         {
             Size = size;
-            Position = position;
+            this.position = position;
             switch (blockID)
             {
                 case 0:
@@ -121,16 +126,16 @@ namespace Box
             //Values are set from the bottomleftfront corner of a box.
 
             // Calculate the position of the vertices on the top face.
-            Vector3 topLeftFront = Position + new Vector3(0.0f, 1.0f, 0.0f) * Size;
-            Vector3 topLeftBack = Position + new Vector3(0.0f, 1.0f, 1.0f) * Size;
-            Vector3 topRightFront = Position + new Vector3(1.0f, 1.0f, 0.0f) * Size;
-            Vector3 topRightBack = Position + new Vector3(1.0f, 1.0f, 1.0f) * Size;
+            Vector3 topLeftFront = position + new Vector3(0.0f, 1.0f, 0.0f) * Size;
+            Vector3 topLeftBack = position + new Vector3(0.0f, 1.0f, 1.0f) * Size;
+            Vector3 topRightFront = position + new Vector3(1.0f, 1.0f, 0.0f) * Size;
+            Vector3 topRightBack = position + new Vector3(1.0f, 1.0f, 1.0f) * Size;
 
             // Calculate the position of the vertices on the bottom face.
-            Vector3 btmLeftFront = Position + new Vector3(0.0f, 0.0f, 0.0f) * Size;
-            Vector3 btmLeftBack = Position + new Vector3(0.0f, 0.0f, 1.0f) * Size;
-            Vector3 btmRightFront = Position + new Vector3(1.0f, 0.0f, 0.0f) * Size;
-            Vector3 btmRightBack = Position + new Vector3(1.0f, 0.0f, 1.0f) * Size;
+            Vector3 btmLeftFront = position + new Vector3(0.0f, 0.0f, 0.0f) * Size;
+            Vector3 btmLeftBack = position + new Vector3(0.0f, 0.0f, 1.0f) * Size;
+            Vector3 btmRightFront = position + new Vector3(1.0f, 0.0f, 0.0f) * Size;
+            Vector3 btmRightBack = position + new Vector3(1.0f, 0.0f, 1.0f) * Size;
 
             // Normal vectors for each face (needed for lighting / display)
             Vector3 normalFront = new Vector3(0.0f, 0.0f, 1.0f) * Size;

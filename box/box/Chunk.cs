@@ -46,11 +46,11 @@ namespace Box
                 {
                     for (int k = 0;k < CHUNK_SIZE; k++)
                     {
-                        blocks[i,j,k] = new Block(new Vector3(1.0f), new Vector3(i, j, k), k % 3);
+                        blocks[i,j,k] = new Block(new Vector3(0.1f), new Vector3(i, j, k), k % 3);
                     }
                 }
             }
-
+            blocks[0, 0, 0] = new Block(new Vector3(0.2f), Vector3.Zero, 0);
         }
 
 

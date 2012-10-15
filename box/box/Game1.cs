@@ -23,30 +23,30 @@ namespace Box
         //Texture2D cubeTexture;
         BasicEffect cubeEffect;
 
-        // Create a cube with a size of 1 (all dimensions) at the origin
-        Block cube = new Block(new Vector3(1, 1, 1), Vector3.Zero, 0);
-        Block cube2 = new Block(new Vector3(1, 1, 1), new Vector3(1.0f, 0.1f, 0.1f), 1);
+        //Testing block as a camera target
+        Block cameraTarget = new Block(new Vector3(1.2f, 1.2f, 1.2f), new Vector3(0f,0f,0f), 0);
 
+        
         List<Block> cubes = new List<Block>();
 
 
         // Position related variables
-        Vector3 cameraPosition = new Vector3(80, 30, -50);
-        float leftRightRotation = MathHelper.PiOver2;
-        float upDownRotation = -MathHelper.Pi / 10.0f;
+        float leftRightRotation = 0;//MathHelper.PiOver2;
+        float upDownRotation = 0;//-MathHelper.Pi / 10.0f;
         const float rotationSpeed = 0.003f;
         const float moveSpeed = 0.8f;
-        Matrix viewMatrix;
         MouseState originalMouseState;
+        int lastScrollValue = 0;
+
         
-        //Vector3 modelPosition = Vector3.Zero;
-        
-        //float XRotation = 0.0f;
-        //float YRotation = 0.0f;
+        ArcBallCamera camera;
+        int zoom = 100;
+
         float aspectRatio = 0.0f;
 
         public Game1()
         {
+            
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
@@ -65,13 +65,23 @@ namespace Box
             // TODO: Add your initialization logic here
             for (int i = 0; i<8; i++)
             {
+                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(i,0,0), 0)); //X - Grass
+                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(0,i,0), 1)); //Y - Dirt
+                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(0,0,i), 2)); //Z -Stone
+
+                cubes[0].Size = new Vector3(2.0f, 2.0f, 2.0f);
+                cubes[0].Position = new Vector3(-0.5f, -0.5f, -0.5f);
+
                 for (int j = 0; j<8; j++)
                 {
-                    for ( int k = 0; k<8; k++)
-                    cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(i,j,k), k % 3));
-
+                    for (int k = 0; k < 8; k++) ;
+                    //cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(i,j,k), i % 2));
+                    
                 }
             }
+
+            cameraTarget.Color = new Color(1.0f, 0.0f, 0.0f);
+            
 
             base.Initialize();
         }
@@ -88,7 +98,13 @@ namespace Box
             //cubeTexture = Content.Load<Texture2D>("CubetacularTexture");
             aspectRatio = GraphicsDevice.Viewport.AspectRatio;
             cubeEffect = new BasicEffect(GraphicsDevice);
-            UpdateViewMatrix();
+
+            camera = new ArcBallCamera(aspectRatio, new Vector3(0.0f,0.0f,0f));
+            camera.MoveCameraRight(0);
+            camera.MoveCameraForward(0);
+
+            
+            //UpdateViewMatrix();
 
             Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height/2);
             originalMouseState = Mouse.GetState();
@@ -118,40 +134,52 @@ namespace Box
             if(state.IsKeyDown(Keys.Escape))
                 this.Exit();
 
-            Vector3 moveVector = new Vector3(0,0,0);
-
-            if (state.IsKeyDown(Keys.Left))
-                moveVector += new Vector3(-1,0,0);
-            if (state.IsKeyDown(Keys.Right))
-                moveVector += new Vector3(1, 0, 0);
-            if (state.IsKeyDown(Keys.Up))
-                moveVector += new Vector3(0, 0, -1);
-            if (state.IsKeyDown(Keys.Down))
-                moveVector += new Vector3(0, 0, 1);
-
-            AddToCameraPosition(moveVector);
+            if (state.IsKeyDown(Keys.A))
+                camera.MoveCameraRight(-1);
+            if (state.IsKeyDown(Keys.D))
+                camera.MoveCameraRight(1);
+            if (state.IsKeyDown(Keys.W))
+                camera.MoveCameraForward(1);
+            if (state.IsKeyDown(Keys.S))
+                camera.MoveCameraForward(-1);
+            if (state.IsKeyDown(Keys.Space))
+                camera.MoveCameraUp(1);
+            if (state.IsKeyDown(Keys.LeftShift))
+                camera.MoveCameraUp(-1);
 
             MouseState currentMouseState = Mouse.GetState();
+            if (lastScrollValue > currentMouseState.ScrollWheelValue)
+                zoom += 5;
+            else if (lastScrollValue < currentMouseState.ScrollWheelValue)
+                zoom -= 5;
+
+            if (zoom < camera.MinZoom)
+                zoom = 0;
+
+            lastScrollValue = currentMouseState.ScrollWheelValue;
+
             if (currentMouseState != originalMouseState)
             {
                 float xDiff = currentMouseState.X - originalMouseState.X;
                 float yDiff = currentMouseState.Y - originalMouseState.Y;
                 leftRightRotation -= rotationSpeed * xDiff;
                 upDownRotation += rotationSpeed * yDiff; //Invert this sign for "normal" mouse input.
+                upDownRotation = MathHelper.Clamp(upDownRotation, camera.MinPitch, camera.MaxPitch);
+                
+                camera.Pitch = upDownRotation;
+                camera.Yaw = leftRightRotation;
+               
+                camera.Zoom = zoom;
+
                 Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
-                UpdateViewMatrix();
             }
 
+            Console.WriteLine("Lk@: " + camera.LookAt);
+            cameraTarget.Position = camera.LookAt - new Vector3(0.5f, 0.5f, 0.5f);
+            cameraTarget.setDirty();
+            Console.WriteLine("Pos: " + cameraTarget.Position);
             base.Update(gameTime);
-        }
-
-        private void AddToCameraPosition(Vector3 moveVector)
-        {
-            Matrix cameraRotation = Matrix.CreateRotationX(upDownRotation) * Matrix.CreateRotationY(leftRightRotation);
-            Vector3 rotatedVector = Vector3.Transform(moveVector, cameraRotation);
-            cameraPosition += moveSpeed * rotatedVector;
-            UpdateViewMatrix();
-
+            Console.WriteLine("Pitch: " + camera.Pitch);
         }
 
         /// <summary>
@@ -162,16 +190,10 @@ namespace Box
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // Set the World matrix which defines the position of the cube
-            //cubeEffect.World = Matrix.CreateRotationY(MathHelper.ToRadians(XRotation)) *
-               // Matrix.CreateRotationX(MathHelper.ToRadians(YRotation)) * Matrix.CreateTranslation(modelPosition);
-
-            // Set the View matrix which defines the camera and what it's looking at
-            //cubeEffect.View = Matrix.CreateLookAt(cameraPosition, modelPosition, Vector3.Up);
-            cubeEffect.View = viewMatrix;
+            cubeEffect.View = camera.ViewMatrix;
 
             // Set the Projection matrix which defines how we see the scene (Field of view)
-            cubeEffect.Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspectRatio, 1.0f, 1000.0f);
+            cubeEffect.Projection = camera.ProjectionMatrix;
 
             // Enable textures on the Cube Effect. this is necessary to texture the model
             cubeEffect.TextureEnabled = false;
@@ -185,39 +207,20 @@ namespace Box
             cubeEffect.LightingEnabled = true;
             cubeEffect.AmbientLightColor = new Vector3(0.1f,0.1f,0.1f);
 
-            //cubeEffect.Parameters["xLightDirection"].SetValue(lightDirection);
-            //cubeEffect.Parameters["xAmbient"].SetValue(0.1f); 
-            //cubeEffect.Parameters["xEnableLighting"].SetValue(true);       
-
             // apply the effect and render the cube
             foreach (EffectPass pass in cubeEffect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                //cube.RenderToDevice(GraphicsDevice);
-                //cube2.RenderToDevice(GraphicsDevice);
 
                 foreach( Block c in cubes)
                 {
                     c.RenderToDevice(GraphicsDevice);
                 }
+
+                cameraTarget.RenderToDevice(GraphicsDevice);
             }
 
             base.Draw(gameTime);
-        }
-
-        private void UpdateViewMatrix()
-        {
-            Matrix cameraRotation = Matrix.CreateRotationX(upDownRotation) * Matrix.CreateRotationY(leftRightRotation);
-
-            Vector3 cameraOriginalTarget = new Vector3(0,0,-1);
-            Vector3 cameraRotatedTarget = Vector3.Transform(cameraOriginalTarget, cameraRotation);
-            Vector3 cameraFinalTarget = cameraPosition + cameraRotatedTarget;
-
-            Vector3 cameraOriginalUpVector = new Vector3(0, 1, 0);
-            Vector3 cameraRotatedUpVector = Vector3.Transform(cameraOriginalUpVector, cameraRotation);
-
-            viewMatrix = Matrix.CreateLookAt(cameraPosition, cameraFinalTarget, cameraRotatedUpVector);
-
         }
     }
 }
