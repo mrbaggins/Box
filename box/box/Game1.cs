@@ -18,6 +18,11 @@ namespace Box
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        SpriteFont debugFont;
+
+        int frameRate = 0;
+        int frameCounter = 0;
+        TimeSpan elapsedTime = TimeSpan.Zero;
 
         // Content
         //Texture2D cubeTexture;
@@ -51,7 +56,7 @@ namespace Box
             Content.RootDirectory = "Content";
 
             // Frame rate is 30 fps by default for Windows Phone.
-            TargetElapsedTime = TimeSpan.FromTicks(333333);
+            //TargetElapsedTime = TimeSpan.FromTicks(333333);
         }
 
         /// <summary>
@@ -81,8 +86,12 @@ namespace Box
             }
 
             cameraTarget.Color = new Color(1.0f, 0.0f, 0.0f);
-            
 
+            debugFont = Content.Load<SpriteFont>("DebugFont");
+            graphics.SynchronizeWithVerticalRetrace = false; //Turns off VSync
+            this.IsFixedTimeStep = false; //Turns of fixed timestep. 
+            //this.TargetElapsedTime = new TimeSpan(6666);
+            graphics.ApplyChanges();
             base.Initialize();
         }
 
@@ -174,12 +183,23 @@ namespace Box
                 Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
             }
 
-            Console.WriteLine("Lk@: " + camera.LookAt);
+            //Console.WriteLine("Lk@: " + camera.LookAt);
             cameraTarget.Position = camera.LookAt - new Vector3(0.5f, 0.5f, 0.5f);
             cameraTarget.setDirty();
-            Console.WriteLine("Pos: " + cameraTarget.Position);
+            //Console.WriteLine("Pos: " + cameraTarget.Position);
+
+            //Framerate counter
+            elapsedTime += gameTime.ElapsedGameTime;
+
+            if (elapsedTime > TimeSpan.FromSeconds(1))
+            {
+                elapsedTime -= TimeSpan.FromSeconds(1);
+                frameRate = frameCounter;
+                frameCounter = 0;
+            }
+
             base.Update(gameTime);
-            Console.WriteLine("Pitch: " + camera.Pitch);
+            //Console.WriteLine("Pitch: " + camera.Pitch);
         }
 
         /// <summary>
@@ -219,6 +239,32 @@ namespace Box
 
                 cameraTarget.RenderToDevice(GraphicsDevice);
             }
+
+
+            //Print the debug information to the top left corner
+            //String debugText =
+            //    "MyBoxGameWithNoName (v0.1) \n" +
+            //    "fps: 82373\n" +
+            //    "gametime: " + (1000 / (gameTime.ElapsedGameTime.Milliseconds + 1)); //+1 to avoid divide by zero
+            
+            //Framerate counter
+            frameCounter++;
+
+            string fps = string.Format("fps: {0}", frameRate);
+
+            spriteBatch.Begin();
+
+            spriteBatch.DrawString(debugFont, fps, new Vector2(33, 33), Color.Black);
+            spriteBatch.DrawString(debugFont, fps, new Vector2(32, 32), Color.White);
+
+            spriteBatch.End();
+                
+            //spriteBatch.Begin();
+            //spriteBatch.DrawString(debugFont, debugText, new Vector2(5, 5), Color.LightGray);
+            //spriteBatch.End();
+            
+            GraphicsDevice.BlendState = BlendState.Opaque;
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
             base.Draw(gameTime);
         }
