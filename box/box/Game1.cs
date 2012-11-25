@@ -33,6 +33,7 @@ namespace Box
 
         
         List<Block> cubes = new List<Block>();
+        Chunk c;
 
 
         // Position related variables
@@ -67,7 +68,7 @@ namespace Box
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            /* TODO: Add your initialization logic here
             for (int i = 0; i<8; i++)
             {
                 cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(i,0,0), 1)); //X - Grass
@@ -83,7 +84,9 @@ namespace Box
                     //cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(i,j,k), i % 2));
                     
                 }
-            }
+            }*/
+
+            c = new Chunk();
 
             cameraTarget.Color = new Color(1.0f, 0.0f, 0.0f);
 
@@ -129,11 +132,6 @@ namespace Box
             // TODO: Unload any non ContentManager content here
         }
 
-        /// <summary>
-        /// Allows the game to run logic such as updating the world,
-        /// checking for collisions, gathering input, and playing audio.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
             // Allows the game to exit
@@ -232,9 +230,17 @@ namespace Box
             {
                 pass.Apply();
 
-                foreach( Block c in cubes)
+                VertexBuffer vb = new VertexBuffer(GraphicsDevice, VertexPositionColorNormal.VertexDeclaration, c.VertexList.Count, BufferUsage.WriteOnly);
+                IndexBuffer ib = new IndexBuffer(GraphicsDevice, typeof(int), c.IndexList.Count, BufferUsage.WriteOnly);
+
+                vb.SetData<VertexPositionColorNormal>(c.VertexList.ToArray());
+                ib.SetData<int>(c.IndexList.ToArray());
+
+                GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vb.VertexCount, 0, c.IndexList.Count/3);
+
+                //foreach( Block c in cubes)
                 {
-                    c.RenderToDevice(GraphicsDevice);
+                    //.RenderToDevice(GraphicsDevice);
                 }
 
                 cameraTarget.RenderToDevice(GraphicsDevice);

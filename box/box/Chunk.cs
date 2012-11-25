@@ -37,17 +37,31 @@ namespace Box
     {
         static int CHUNK_SIZE = 8;
         private Block[,,] blocks;
-        private bool isDirty = true;
+        private bool isDirty;
 
         private List<VertexPositionColorNormal> vertexList;
         private List<int> indexList;
 
+        public List<VertexPositionColorNormal> VertexList
+        {
+            set { vertexList = value;}
+            get { return vertexList; }
+        }
+        public List<int> IndexList
+        {
+            set { this.indexList = value;}
+            get { return indexList; }
+        }
+
         public Chunk()
         {
             blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+            VertexList = new List<VertexPositionColorNormal>();
+            IndexList = new List<int>();
 
-            /* Old stripey generation
-             * 
+
+            //Old stripey generation
+            
             for (int i = 0; i < CHUNK_SIZE; i++)
             {
                 for (int j = 0; j < CHUNK_SIZE; j++)
@@ -58,11 +72,12 @@ namespace Box
                     }
                 }
             }
-             * */
+            
 
             blocks[0, 0, 0] = new Block(new Vector3(0.2f), Vector3.Zero, 0);
 
-            this.isDirty = true;
+            isDirty = true;
+            regenerateMesh();
 
             
         }
@@ -107,19 +122,96 @@ namespace Box
             Vector3 normal;
 
             //For temporary storage of the vertex index until it is added to indexBuffer
-            uint v1,v2,v3,v4,v5,v6,v7,v8;
+            int v1,v2,v3,v4,v5,v6,v7,v8;
 
+            //Front of the box
+            normal = new Vector3(0.0f, 0.0f, 1.0f);
+
+            v1 = AddVertexToMesh(p1, c, normal);
+            v2 = AddVertexToMesh(p2, c, normal);
+            v3 = AddVertexToMesh(p3, c, normal);
+            v4 = AddVertexToMesh(p4, c, normal);
+
+            AddTriangleToMesh(v1, v2, v3);
+            AddTriangleToMesh(v2, v3, v4);
+
+            //Back side of the box
+            normal = new Vector3(0.0f, 0.0f, -1.0f);
+
+            v5 = AddVertexToMesh(p5, c, normal);
+            v6 = AddVertexToMesh(p6, c, normal);
+            v7 = AddVertexToMesh(p7, c, normal);
+            v8 = AddVertexToMesh(p8, c, normal);
+
+            AddTriangleToMesh(v5, v6, v7);
+            AddTriangleToMesh(v6, v7, v8);
+
+            //Left
+            normal = new Vector3(-1.0f, 0.0f, 0.0f);
+
+            v1 = AddVertexToMesh(p1, c, normal);
+            v3 = AddVertexToMesh(p3, c, normal);
+            v5 = AddVertexToMesh(p5, c, normal);
+            v7 = AddVertexToMesh(p7, c, normal);
+
+            AddTriangleToMesh(v1, v3, v5);
+            AddTriangleToMesh(v3, v5, v7);
+
+            //Right
+            normal = new Vector3(1.0f, 0.0f, 0.0f);
+
+            v2 = AddVertexToMesh(p2, c, normal);
+            v4 = AddVertexToMesh(p4, c, normal);
+            v6 = AddVertexToMesh(p6, c, normal);
+            v8 = AddVertexToMesh(p8, c, normal);
+
+            AddTriangleToMesh(v2, v4, v6);
+            AddTriangleToMesh(v4, v6, v8);
+
+            //Top
+            normal = new Vector3(0.0f, 1.0f, 0.0f);
+
+            v1 = AddVertexToMesh(p1, c, normal);
+            v2 = AddVertexToMesh(p2, c, normal);
+            v5 = AddVertexToMesh(p5, c, normal);
+            v6 = AddVertexToMesh(p6, c, normal);
+
+            AddTriangleToMesh(v1, v2, v5);
+            AddTriangleToMesh(v2, v5, v6);
+
+            //Bottom
+            normal = new Vector3(0.0f, -1.0f, 0.0f);
+
+            v3 = AddVertexToMesh(p3, c, normal);
+            v4 = AddVertexToMesh(p4, c, normal);
+            v7 = AddVertexToMesh(p7, c, normal);
+            v8 = AddVertexToMesh(p8, c, normal);
+
+            AddTriangleToMesh(v3, v4, v7);
+            AddTriangleToMesh(v4, v7, v8);
 
         }
 
-        private uint AddVertexToMesh(Vector3 point, Color color, Vector3 normal)
+        private int AddVertexToMesh(Vector3 point, Color color, Vector3 normal)
         {
+            //Make it into a vertex
+            VertexPositionColorNormal v = new VertexPositionColorNormal(point, color, normal);
+
             //Check if vertex already exists
-            //If it does, return the index
-            //If it doesnt, add the new vertex, and return the index.
+            //if (VertexList.Contains(v))
+                //return VertexList.IndexOf(v);
+            //else
+            {
+                VertexList.Add(v);
+                return VertexList.Count;
+            }
+        }
 
-
-            return 0; //Index of the vertex in the List<>
+        private void AddTriangleToMesh(int a, int b, int c)
+        {
+            IndexList.Add(a);
+            IndexList.Add(b);
+            IndexList.Add(c);
         }
     }
 }
