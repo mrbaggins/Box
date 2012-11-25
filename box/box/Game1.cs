@@ -70,9 +70,9 @@ namespace Box
             // TODO: Add your initialization logic here
             for (int i = 0; i<8; i++)
             {
-                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(i,0,0), 0)); //X - Grass
-                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(0,i,0), 1)); //Y - Dirt
-                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(0,0,i), 2)); //Z -Stone
+                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(i,0,0), 1)); //X - Grass
+                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(0,i,0), 2)); //Y - Dirt
+                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(0,0,i), 3)); //Z -Stone
 
                 cubes[0].Size = new Vector3(2.0f, 2.0f, 2.0f);
                 cubes[0].Position = new Vector3(-0.5f, -0.5f, -0.5f);
@@ -89,7 +89,7 @@ namespace Box
 
             debugFont = Content.Load<SpriteFont>("DebugFont");
             graphics.SynchronizeWithVerticalRetrace = false; //Turns off VSync
-            this.IsFixedTimeStep = false; //Turns of fixed timestep. 
+            this.IsFixedTimeStep = true; //Turns of fixed timestep. 
             //this.TargetElapsedTime = new TimeSpan(6666);
             graphics.ApplyChanges();
             base.Initialize();
