@@ -92,7 +92,7 @@ namespace Box
         private bool projectionMatrixDirty = true;
 
         public float MinPitch = -MathHelper.PiOver2 + 0.3f;
-        public float MaxPitch = 0.0f;
+        public float MaxPitch = 1.0f;
         private float pitch;
         public float Pitch
         {

@@ -7,38 +7,13 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Box
 {
-    //public struct VertexPositionColorNormal : IVertexType
-    //{
-    //    public Vector3 Position;
-    //    public Color Color;
-    //    public Vector3 Normal;
-
-    //    public readonly static VertexDeclaration VertexDeclaration
-    //        = new VertexDeclaration(
-    //            new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
-    //            new VertexElement(sizeof(float) * 3, VertexElementFormat.Color, VertexElementUsage.Color, 0),
-    //            new VertexElement(sizeof(float) * 3 + 4, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0)
-    //            );
-
-    //    public VertexPositionColorNormal(Vector3 pos, Color c, Vector3 n)
-    //    {
-    //        Position = pos;
-    //        Color = c;
-    //        Normal = n;
-
-    //    }
-
-    //    VertexDeclaration IVertexType.VertexDeclaration
-    //    {
-    //        get { return VertexDeclaration; }
-    //    }
-    //}
-
     public class Block
     {
         const int NUM_TRIANGLES = 12;
         const int NUM_VERTICES = 36;
-        public enum BlockTypes { Grass, Dirt, Stone };
+        public enum BlockTypes { Air, Grass, Dirt, Stone };
+
+        public bool isActive = true;
 
 
         // Array of vertex information - contains position, normal and texture data
@@ -71,19 +46,25 @@ namespace Box
             this.position = position;
             switch (blockID)
             {
-                case 0:
-                    Color = new Color(20, 120, 10);
+                case 0: //Air
+                    Color = new Color(20, 120, 255);
                     break;
-                case 1:
+                case 1: //Grass
+                    Color = new Color(20, 120, 40);
+                    break;
+                case 2: //Dirt
                     Color = new Color(128, 100, 0);
                     break;
-                case 2:
+                case 3: //Stone
                     Color = new Color(128, 120, 100);
                     break;
                 default:
                     Color = new Color(0, 0, 0);
                     break;
             }
+
+            if (blockID != 0)
+                this.isActive = true;
             
         }
 
