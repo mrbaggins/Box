@@ -68,65 +68,40 @@ namespace Box
         /// </summary>
         protected override void Initialize()
         {
-            /* TODO: Add your initialization logic here
-            for (int i = 0; i<8; i++)
-            {
-                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(i,0,0), 1)); //X - Grass
-                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(0,i,0), 2)); //Y - Dirt
-                cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(0,0,i), 3)); //Z -Stone
-
-                cubes[0].Size = new Vector3(2.0f, 2.0f, 2.0f);
-                cubes[0].Position = new Vector3(-0.5f, -0.5f, -0.5f);
-
-                for (int j = 0; j<8; j++)
-                {
-                    for (int k = 0; k < 8; k++) ;
-                    //cubes.Add(new Block(new Vector3(1f,1f,1f), new Vector3(i,j,k), i % 2));
-                    
-                }
-            }*/
-
+            //Dummy chunk for testing
             c = new Chunk();
 
+            //Camera Target block (Covers Camera.LookAt coordinates)
             cameraTarget.Color = new Color(1.0f, 0.0f, 0.0f);
 
-            debugFont = Content.Load<SpriteFont>("DebugFont");
-            graphics.SynchronizeWithVerticalRetrace = false; //Turns off VSync
-            this.IsFixedTimeStep = true; //Turns of fixed timestep. 
-            //this.TargetElapsedTime = new TimeSpan(6666);
-            graphics.ApplyChanges();
+            //Set up some stuff for graphics
+            aspectRatio = GraphicsDevice.Viewport.AspectRatio;
+            cubeEffect = new BasicEffect(GraphicsDevice);
+            graphics.SynchronizeWithVerticalRetrace = false;    //Turns off VSync
+            this.IsFixedTimeStep = true;                        //Make sure it's fixed timestep. 
+            //this.TargetElapsedTime = new TimeSpan(6666);      //Sets the fixed timestep
+            graphics.ApplyChanges();                            //Actually sticks the above changes
+            
+            camera = new ArcBallCamera(aspectRatio, new Vector3(0.0f, 0.0f, 0f));
+            //camera.MoveCameraRight(0);
+            //camera.MoveCameraForward(0);
+
+            //Set up the mouse
+            Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
+            originalMouseState = Mouse.GetState();
+            
             base.Initialize();
         }
 
-        /// <summary>
-        /// LoadContent will be called once per game and is the place to load
-        /// all of your content.
-        /// </summary>
         protected override void LoadContent()
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            //cubeTexture = Content.Load<Texture2D>("CubetacularTexture");
-            aspectRatio = GraphicsDevice.Viewport.AspectRatio;
-            cubeEffect = new BasicEffect(GraphicsDevice);
-
-            camera = new ArcBallCamera(aspectRatio, new Vector3(0.0f,0.0f,0f));
-            camera.MoveCameraRight(0);
-            camera.MoveCameraForward(0);
-
-            
-            //UpdateViewMatrix();
-
-            Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height/2);
-            originalMouseState = Mouse.GetState();
-
+            // Create a font for drawing text to the screen with the Spritebatch
+            debugFont = Content.Load<SpriteFont>("DebugFont");
         }
 
-        /// <summary>
-        /// UnloadContent will be called once per game and is the place to unload
-        /// all content.
-        /// </summary>
         protected override void UnloadContent()
         {
             // TODO: Unload any non ContentManager content here
@@ -134,6 +109,8 @@ namespace Box
 
         protected override void Update(GameTime gameTime)
         {
+
+            #region keyboard controls
             // Allows the game to exit
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
@@ -153,7 +130,8 @@ namespace Box
                 camera.MoveCameraUp(1);
             if (state.IsKeyDown(Keys.LeftShift))
                 camera.MoveCameraUp(-1);
-
+            #endregion 
+            #region mouse controls
             MouseState currentMouseState = Mouse.GetState();
             if (lastScrollValue > currentMouseState.ScrollWheelValue)
                 zoom += 5;
@@ -180,11 +158,10 @@ namespace Box
 
                 Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
             }
+            #endregion
 
-            //Console.WriteLine("Lk@: " + camera.LookAt);
-            cameraTarget.Position = camera.LookAt - new Vector3(0.5f, 0.5f, 0.5f);
+            cameraTarget.Position = camera.LookAt - new Vector3(0.5f, 0.5f, 0.5f); //Can this be removed to somewhere else?
             cameraTarget.setDirty();
-            //Console.WriteLine("Pos: " + cameraTarget.Position);
 
             //Framerate counter
             elapsedTime += gameTime.ElapsedGameTime;
@@ -197,24 +174,16 @@ namespace Box
             }
 
             base.Update(gameTime);
-            //Console.WriteLine("Pitch: " + camera.Pitch);
         }
 
-        /// <summary>
-        /// This is called when the game should draw itself.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            cubeEffect.View = camera.ViewMatrix;
+            cubeEffect.View = camera.ViewMatrix;                //View Matrix does what?
+            cubeEffect.Projection = camera.ProjectionMatrix;    //Projection is the field of view
 
-            // Set the Projection matrix which defines how we see the scene (Field of view)
-            cubeEffect.Projection = camera.ProjectionMatrix;
-
-            // Enable textures on the Cube Effect. this is necessary to texture the model
-            cubeEffect.TextureEnabled = false;
+            cubeEffect.TextureEnabled = false;                  //turn ooff the textures in the effect shader
             //cubeEffect.Texture = cubeTexture;
 
             // Enable some pretty lights
@@ -230,30 +199,28 @@ namespace Box
             {
                 pass.Apply();
 
+                #region cube data
                 VertexBuffer vb = new VertexBuffer(GraphicsDevice, VertexPositionColorNormal.VertexDeclaration, c.VertexList.Count, BufferUsage.WriteOnly);
                 IndexBuffer ib = new IndexBuffer(GraphicsDevice, typeof(int), c.IndexList.Count, BufferUsage.WriteOnly);
 
-                vb.SetData<VertexPositionColorNormal>(c.VertexList.ToArray());
-                ib.SetData<int>(c.IndexList.ToArray());
+                VertexPositionColorNormal[] vl = c.VertexList.ToArray();
+                int[] il = c.IndexList.ToArray();
+                
+                vb.SetData<VertexPositionColorNormal>(vl);
+                ib.SetData<int>(il);
+                Console.WriteLine(GraphicsDevice.Indices);
+
+                GraphicsDevice.SetVertexBuffer(vb);
+                GraphicsDevice.Indices = ib;
 
                 GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vb.VertexCount, 0, c.IndexList.Count/3);
+                #endregion
 
-                //foreach( Block c in cubes)
-                {
-                    //.RenderToDevice(GraphicsDevice);
-                }
-
+                //Draw the camera target (camera.lookat)
                 cameraTarget.RenderToDevice(GraphicsDevice);
             }
 
-
-            //Print the debug information to the top left corner
-            //String debugText =
-            //    "MyBoxGameWithNoName (v0.1) \n" +
-            //    "fps: 82373\n" +
-            //    "gametime: " + (1000 / (gameTime.ElapsedGameTime.Milliseconds + 1)); //+1 to avoid divide by zero
-            
-            //Framerate counter
+            #region Debug text drawing
             frameCounter++;
 
             string fps = string.Format("fps: {0}", frameRate);
@@ -264,11 +231,9 @@ namespace Box
             spriteBatch.DrawString(debugFont, fps, new Vector2(32, 32), Color.White);
 
             spriteBatch.End();
-                
-            //spriteBatch.Begin();
-            //spriteBatch.DrawString(debugFont, debugText, new Vector2(5, 5), Color.LightGray);
-            //spriteBatch.End();
-            
+            #endregion
+
+            //Reset graphics device states for drawing in 3D
             GraphicsDevice.BlendState = BlendState.Opaque;
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 

@@ -13,7 +13,7 @@ namespace Box
         const int NUM_VERTICES = 36;
         public enum BlockTypes { Air, Grass, Dirt, Stone };
 
-        public bool isActive = false;
+        public bool isActive = true;
 
 
         // Array of vertex information - contains position, normal and texture data
